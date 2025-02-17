@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Human Stress Detection</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Human Stress Detection</h1>
+        <p>Knowing your current level of stress is the first step in taking control.</p>
+        <p>Take this simple test and measure the stress in your life.</p>
+
+        <form id="stressForm">
+            <div class="form-group">
+                <label for="respiration">Respiration Rate:</label>
+                <input type="number" id="respiration" name="respiration" required>
+            </div>
+            <div class="form-group">
+                <label for="snoring">Snoring Level:</label>
+                <input type="number" id="snoring" name="snoring" required>
+            </div>
+            <div class="form-group">
+                <label for="breath">Breath Rate:</label>
+                <input type="number" id="breath" name="breath" required>
+            </div>
+            <div class="form-group">
+                <label for="temperature">Body Temperature:</label>
+                <input type="number" id="temperature" name="temperature" required>
+            </div>
+            <button type="submit">Get Your Stress Score</button>
+        </form>
+
+        <div id="result">
+            <h2 id="prediction"></h2>
+            <div class="stress-meter">
+                <div class="meter-bar">
+                    <div class="meter-fill" id="meterFill"></div>
+                </div>
+                <div class="meter-labels">
+                    <span>Low</span>
+                    <span>Moderate</span>
+                    <span>High</span>
+                </div>
+            </div>
+            <ul id="remedies"></ul>
+        </div>
+    </div>
+
+    <script>
+        // Handle form submission
+        document.getElementById('stressForm').addEventListener('submit', function (event) {
+            event.preventDefault();
+
+            // Send data to the server using Fetch API
+            fetch('/predict', {
+                method: 'POST',
+                body: new FormData(this)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    document.getElementById('result').innerHTML = `<p>${data.error}</p>`;
+                } else {
+                    // Display the prediction
+                    document.getElementById('prediction').innerText = `Predicted Stress Level: ${data.prediction}`;
+
+                    // Update the stress meter
+                    const meterFill = document.getElementById('meterFill');
+                    if (data.prediction === 'Low stress') {
+                        meterFill.style.width = '33%';
+                        meterFill.style.backgroundColor = '#4CAF50'; // Green
+                    } else if (data.prediction === 'Medium stress') {
+                        meterFill.style.width = '66%';
+                        meterFill.style.backgroundColor = '#FFC107'; // Yellow
+                    } else if (data.prediction === 'High stress') {
+                        meterFill.style.width = '100%';
+                        meterFill.style.backgroundColor = '#F44336'; // Red
+                    }
+
+                    // Display the remedies
+                    const remediesList = document.getElementById('remedies');
+                    remediesList.innerHTML = ''; // Clear previous remedies
+                    data.remedies.forEach(remedy => {
+                        const li = document.createElement('li');
+                        li.innerText = remedy;
+                        remediesList.appendChild(li);
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+    </script>
+</body>
+</html>
